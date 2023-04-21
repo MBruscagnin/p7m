@@ -1,0 +1,18 @@
+# Set output directory
+$outdir = "$($args[0]).out"
+# Extract filename without path
+$filename = Split-Path $args[0] -Leaf
+# Set output file name
+$outfile = "$outdir\$($filename.Replace('.p7m', ''))"
+# Create output directory
+New-Item -ItemType Directory -Force -Path $outdir | Out-Null
+# Extract certificate from p7m file
+openssl pkcs7 -inform DER -in $args[0] -print_certs -out "$outdir\signer.pem"
+# Verify and extract signed content from p7m file
+openssl smime -verify -in $args[0] -inform der -noverify -signer "$outdir\signer.pem" -out $outfile 2&gt;$null
+# Open extracted file
+Invoke-Item $outfile
+# Uncomment the following lines to delete extracted files and directory
+# Remove-Item "$outdir\signer.pem"
+# Remove-Item $outfile
+# Remove-Item $outdir
